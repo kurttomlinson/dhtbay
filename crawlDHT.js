@@ -1,4 +1,4 @@
-var number_of_nodes = 100;
+var number_of_nodes = 1000;
 
 var config = require('./config/database');
 var util = require('util');
