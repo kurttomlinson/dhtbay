@@ -5,12 +5,13 @@
   "dependencies": {
     "aria2": "^1.0.1",
     "async": "^1.5.2",
-    "bittorrent-dht": "^6.2.0",
+    "bittorrent-dht": ">=6.2.0",
     "bittorrent-tracker": "^7.0.0",
     "mongoose": "^4.3.5",
     "natural": "^0.2.1",
     "read-torrent": "^1.3.0",
-    "redis": "^2.4.2"
+    "redis": "^2.4.2",
+    "magnet-to-torrent": ">=0.0.0"
   },
   "devDependencies": {
     "heapdump": "~0.3.7"
