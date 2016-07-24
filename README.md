@@ -83,13 +83,13 @@ Some tasks can be added in a cron treatment. For example this is my CRON configu
 
 ```
 # Update swarm once an hour
-40 * * * * nodejs ~/dhtbay/updateSeed.js 2>&1 > ~/dhtbay/log/update.log
+40 * * * * nodejs ~/dhtbay/updateSeed.js forceAll > ~/dhtbay/log/update.log 2>&1
 # Bayesian categorization once an hour
-20 * * * * nodejs ~/dhtbay/classifier.js 2>&1 > ~/dhtbay/log/classifier.log
+20 * * * * nodejs ~/dhtbay/classifier.js> ~/dhtbay/log/classifier.log 2>&1
 # Categorize once an hour
-30 * * * * nodejs ~/dhtbay/categorize.js 2>&1 > ~/dhtbay/log/categorize.log
+30 * * * * nodejs ~/dhtbay/categorize.js > ~/dhtbay/log/categorize.log 2>&1
 # Load torrent files every ten minutes
-*/10 * * * * nodejs ~/dhtbay/loadFileTorrent.js 2>&1 > ~/dhtbay/logs/load.log
+*/10 * * * * nodejs ~/dhtbay/loadFileTorrent.js > ~/dhtbay/logs/load.log 2>&1
 ```
 
 Replace ~/dhtbay/ with the path to where you cloned this repository.
