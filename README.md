@@ -82,14 +82,14 @@ Replace /home/dht/dhtbay/ with the path to where you cloned this repository.
 Some tasks can be added in a cron treatment. For example this is my CRON configuration:
 
 ```
-# Update swarm once an hour
-40 * * * * nodejs ~/dhtbay/updateSeed.js forceAll > ~/dhtbay/log/update.log 2>&1
+# Update swarm every ten minutes
+*/10 * * * * nodejs ~/dhtbay/updateSeed.js > ~/dhtbay/log/update.log 2>&1
 # Bayesian categorization once an hour
-20 * * * * nodejs ~/dhtbay/classifier.js> ~/dhtbay/log/classifier.log 2>&1
+# 0 * * * * nodejs ~/dhtbay/classifier.js> ~/dhtbay/log/classifier.log 2>&1
 # Categorize once an hour
-30 * * * * nodejs ~/dhtbay/categorize.js > ~/dhtbay/log/categorize.log 2>&1
-# Load torrent files every ten minutes
-*/10 * * * * nodejs ~/dhtbay/loadFileTorrent.js > ~/dhtbay/logs/load.log 2>&1
+# 30 * * * * nodejs ~/dhtbay/categorize.js > ~/dhtbay/log/categorize.log 2>&1
+# Load torrent files every minutes
+* * * * * nodejs ~/dhtbay/loadFileTorrent.js > ~/dhtbay/logs/load.log 2>&1
 ```
 
 Replace ~/dhtbay/ with the path to where you cloned this repository.
@@ -99,12 +99,12 @@ If cron on your operating system supports `@reboot` syntax, then you can add the
 ```
 @reboot nodejs ~/dhtbay/crawlDHT.js > ~/dhtbay/logs/crawldht.txt 2>&1
 @reboot nodejs ~/dhtbay/loadDHT.js > ~/dhtbay/logs/loaddht.txt 2>&1
-@reboot aria2c -q -j 10 --log-level=notice --http-accept-gzip=true --check-certificate=false --follow-torrent=false --enable-rpc --dir=~/dhtbay/torrent -l ~/dhtbay/logs/aria2c.log
+@reboot aria2c -q -j 240 --log-level=notice --http-accept-gzip=true --check-certificate=false --follow-torrent=false --enable-rpc --dir=/home/dht/dhtbay/torrent -l /home/dht/dhtbay/logs/aria2c.log --bt-metadata-only=true --bt-save-metadata=true --bt-stop-timeout=120
 ```
 
 If cron doesn't support the `@reboot` syntax on your system, you'll have to find some other way to make sure those commands get run each time your system boots.
 
-Replace ~/dhtbay/ with the path to where you cloned this repository.
+Replace `~/dhtbay/` and `/home/dht/` with the path to where you cloned this repository.
 
 You'll have your DHT Crawler up and running. Crawling may take some time so be patient.
 
