@@ -24,15 +24,17 @@ var port = 6887;
 var lastDay = new Date();
 lastDay.setDate(lastDay.getDate() - 1);
 var filter = {};
-var limit_count = 1000;
 
+// 250 queries at a rate of 1 query every 2 seconds
+// takes a little over 8 minutes to complete
+var limit_count = 250;
 var seconds_per_torrent = 2;
 
 Array.prototype.max = function() {
   return Math.max.apply(null, this);
 };
 
-var stream = Torrent.find(filter).sort({'lastmod': -1}).limit(limit_count).stream();
+var stream = Torrent.find(filter).sort({'lastmod': 1}).limit(limit_count).stream();
 stream.on('data', function(torrent) {
 	var self = this;
 	self.pause();
@@ -41,6 +43,7 @@ stream.on('data', function(torrent) {
                 var leechers_max = Math.max.apply(null, leechers);
 		torrent.swarm.seeders = seeders_max;
                 torrent.swarm.leechers = leechers_max;
+		console.log("lastmod=" + torrent.lastmod);
                 torrent.lastmod = new Date();
 
 		client.destroy();
