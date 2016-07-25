@@ -42,29 +42,41 @@ function run() {
     if(fs.existsSync(dest+hash.toString().toUpperCase()+'.torrent')) {console.log("File "+hash.toString().toUpperCase()+".torrent already exists");return;}
     var magnet = MAGNET_TEMPLATE.replace('{DHTHASH}',hash.toString().toUpperCase());
 
-    magnetToTorrent.getLink(magnet)
-    .then( function(torrentLink){
-      console.log(torrentLink); // torrent url as string
-      aria2.open(function() {
-        aria2.send('getVersion', function(err,res){
-          if(err) { console.log(err); return; }
-          aria2.send('addUri',[torrentLink],function(err,res){
-            if(err) { console.log(err); return;}
-            console.log("Added : " + hash.toString());
-            client.rpush("TORS", hash.toString());
-            aria2.close();
-          })
-        });
+    console.log(magnet); // torrent url as string
+    aria2.open(function() {
+      aria2.send('getVersion', function(err,res){
+        if(err) { console.log(err); return; }
+        aria2.send('addUri',[magnet],function(err,res){
+          if(err) { console.log(err); return;}
+          console.log("Added torrent to download queue: " + hash.toString());
+          aria2.close();
+        })
       });
-    })
-    .fail(function(error){
-        console.error(error); // couldn't get a valid link
     });
+
+    // magnetToTorrent.getLink(magnet)
+    // .then( function(torrentLink){
+    //   console.log(torrentLink); // torrent url as string
+    //   aria2.open(function() {
+    //     aria2.send('getVersion', function(err,res){
+    //       if(err) { console.log(err); return; }
+    //       aria2.send('addUri',[torrentLink],function(err,res){
+    //         if(err) { console.log(err); return;}
+    //         console.log("Added : " + hash.toString());
+    //         //client.rpush("TORS", hash.toString());
+    //         aria2.close();
+    //       })
+    //     });
+    //   });
+    // })
+    // .fail(function(error){
+    //     console.error(error); // couldn't get a valid link
+    // });
   })
 
 }
 
 setInterval(function(){
    run();
-}, 5000);
+}, 1000);
 
