@@ -23,19 +23,15 @@ var port = 6887;
 
 var lastDay = new Date();
 lastDay.setDate(lastDay.getDate() - 1);
-var filter = { 'lastmod' : { $lt : lastDay } };
+var filter = {};
+var limit_count = 1000;
 
-if(args.length>0){
-	if(args[0]=="forceAll"){
-		filter = {};
-	}
-}
-
-var stream = Torrent.find(filter).sort({'lastmod': -1}).limit(100).stream();
+var stream = Torrent.find(filter).sort({'lastmod': -1}).limit(limit_count).stream();
 stream.on('data', function(torrent) {
 	var self = this;
 	self.pause();
-	console.log("Processing torrent : "+torrent._id);
+	console.log("========================================================================================");
+	console.log("Processing torrent : " + torrent._id);
 	var parsedTorrent = { 'infoHash': torrent._id, 'length': torrent.size, 'announce': torrent.details };
 
 	var client = Client(peerId, port, parsedTorrent);
@@ -48,16 +44,17 @@ stream.on('data', function(torrent) {
 		torrent.lastmod = new Date();
 		torrent.save(function(err) {
 			if(err) { console.log("Error while saving"+err); }
-			console.log("Torrent saved : "+torrent._id); self.resume();
+			console.log("Torrent saved: "+torrent._id + " Seeds: " + torrent.swarm.seeders); self.resume();
 		});
 	});
 	client.on('error', function(err) {
-		console.log("Torrent client error : "+err); self.resume();
+		console.log("Torrent client error : "+err); //self.resume();
 	});
 	client.on('warning', function(err) {
-		console.log("Torrent client error : "+err); self.resume();
+		console.log("Torrent client warning : "+err); //self.resume();
 	});
 	client.scrape();
+
 });
 
 stream.on('error', function(err) {
