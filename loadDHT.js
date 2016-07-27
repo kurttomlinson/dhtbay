@@ -1,7 +1,5 @@
-var maximum_torrents = 10;
-var torrents_per_second = 0.2;
-var torrent_timeout = maximum_torrents / torrents_per_second;
-console.log("torrent_timeout: " + torrent_timeout);
+var seconds_per_batch = 3*60;
+var torrents_per_batch = 100;
 
 var config = require ('./config/database');
 var fs = require('fs');
@@ -48,13 +46,21 @@ console.log = function(data) {
 };
 
 function timeout_torrents() {
-  if (web_torrent_client.torrents.length > maximum_torrents) {
-    console.log("torrent timed out: " + web_torrent_client.torrents[0].infoHash);
+  // if (web_torrent_client.torrents.length > maximum_torrents) {
+  //   console.log("torrent timed out: " + web_torrent_client.torrents[0].infoHash);
+  //   web_torrent_client.remove(web_torrent_client.torrents[0].infoHash, function(err){
+  //     if(err) {console.log("web_torrent_client.remove error");console.log(err); return;}
+  //     console.log("web_torrent_client.torrents.length: " + web_torrent_client.torrents.length);
+  //   });
+  // }
+  if (web_torrent_client.torrents.length > 0) {
+    console.log("Killing torrent: " + web_torrent_client.torrents[0].infoHash);
     web_torrent_client.remove(web_torrent_client.torrents[0].infoHash, function(err){
       if(err) {console.log("web_torrent_client.remove error");console.log(err); return;}
       console.log("web_torrent_client.torrents.length: " + web_torrent_client.torrents.length);
     });
   }
+
 }
 
 function run() {
@@ -68,7 +74,7 @@ function run() {
     console.log("Downloading magnet: " + magnet);
     var this_torrent = web_torrent_client.add(magnet);
     this_torrent.on('error', function(err) {
-      if(err) {console.log("this_torrent error"); console.log(err); return;}
+      if(err) {console.log(err); return;}
     });
 
 
@@ -108,7 +114,13 @@ function run() {
 }
 
 setInterval(function(){
-  timeout_torrents();
-  run();
-}, 1000 / torrents_per_second);
+  while (web_torrent_client.torrents.length > 0) {
+    timeout_torrents();
+  }
+  setTimeout(function(){
+    for (i=0; i<torrents_per_batch; i++) {
+      run();
+    }
+  }, 3 * 1000);
+}, 1000 * seconds_per_batch);
 
