@@ -29,7 +29,7 @@ var filter = {};
 // 250 queries at a rate of 1 query every 2 seconds
 // takes a little over 8 minutes to complete
 var limit_count = 160;
-var seconds_per_torrent = 3;
+var seconds_per_torrent = 15;
 
 Array.prototype.max = function() {
   return Math.max.apply(null, this);
