@@ -40,19 +40,19 @@ stream.on('data', function(torrent) {
 	var self = this;
 	self.pause();
 	setTimeout(function(){
-                var seeders_max = Math.max.apply(null, seeders);
-                var leechers_max = Math.max.apply(null, leechers);
+		var seeders_max = Math.max.apply(null, seeders);
+		var leechers_max = Math.max.apply(null, leechers);
 		torrent.swarm.seeders = seeders_max;
-                torrent.swarm.leechers = leechers_max;
+		torrent.swarm.leechers = leechers_max;
 		console.log("lastmod=" + torrent.lastmod);
-                torrent.lastmod = new Date();
+		torrent.lastmod = new Date();
 
 		client.destroy();
 
-                torrent.save(function(err) {
-                        if(err) { console.log("Error while saving"+err); }
-                        console.log("Torrent saved: "+torrent._id + " Seeders: " + torrent.swarm.seeders + " Leechers: " + torrent.swarm.leechers);
-                });
+		torrent.save(function(err) {
+			if(err) { console.log("Error while saving"+err); }
+			console.log("Torrent saved: "+torrent._id + " Seeders: " + torrent.swarm.seeders + " Leechers: " + torrent.swarm.leechers);
+		});
 
 		self.resume();
 	}, seconds_per_torrent * 1000);
