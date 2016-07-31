@@ -36,7 +36,7 @@ fs.readdir(TORRENT_PATH, function(err, files) {
       var ofile = file;
       rt(ofile, function(err, ftorrent){
         if(err) {console.log(err); callback(); return;}
-        console.log("treating file : "+ofile);
+        console.log("Inspecting file: " + ofile);
         var files = null;
         var size = 0;
         if( typeof ftorrent.files !== "undefined" ) {
@@ -65,7 +65,7 @@ fs.readdir(TORRENT_PATH, function(err, files) {
               'imported': new Date()
             });
             t.save(function(err){
-              console.log('File ' + ofile + ' added');
+              console.log('File ' + ofile + ' added.');
               //fs.unlinkSync(ofile);
               callback();
             });
