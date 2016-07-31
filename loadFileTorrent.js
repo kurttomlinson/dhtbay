@@ -71,7 +71,7 @@ fs.readdir(TORRENT_PATH, function(err, files) {
             });
           } else {
             console.log('Torrent '+infoHash+' already present.');
-            fs.unlinkSync(ofile);
+            //fs.unlinkSync(ofile);
             callback();
           }
         });
