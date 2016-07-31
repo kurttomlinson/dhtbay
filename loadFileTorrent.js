@@ -53,7 +53,7 @@ fs.readdir(TORRENT_PATH, function(err, files) {
         var infoHash = ftorrent.infoHash;
         
         Torrent.findById(infoHash, function(err, torrent){
-          if(err) {console.log(err); callback();}
+          if(err) {console.log(err); callback(); return;}
           if(!torrent) {
             console.log("a");
             var t = new Torrent({
