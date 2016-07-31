@@ -40,9 +40,29 @@ stream.on('data', function(torrent) {
 	var self = this;
 	self.pause();
 
+	console.log("========================================================================================");
+	console.log("Processing torrent : " + torrent._id);
+	var parsedTorrent = { 'infoHash': torrent._id, 'length': torrent.size, 'announce': torrent.details };
+
 	var client = Client(peerId, port, parsedTorrent);
 	var seeders = [0];
 	var leechers = [0];
+
+	client.on('scrape', function(data) {
+		console.log("got a response from tracker: "+data.announce);
+		console.log("number of seeders : "+data.complete);
+		console.log("number of leechers : "+data.incomplete);
+
+		seeders.push(data.complete);
+		leechers.push(data.incomplete);
+	});
+	client.on('error', function(err) {
+		console.log("Torrent client error : "+err); //self.resume();
+	});
+	client.on('warning', function(err) {
+		console.log("Torrent client warning : "+err); //self.resume();
+	});
+	client.scrape();
 
 	setTimeout(function(){
 		var seeders_max = Math.max.apply(null, seeders);
@@ -61,25 +81,6 @@ stream.on('data', function(torrent) {
 
 		self.resume();
 	}, seconds_per_torrent * 1000);
-	console.log("========================================================================================");
-	console.log("Processing torrent : " + torrent._id);
-	var parsedTorrent = { 'infoHash': torrent._id, 'length': torrent.size, 'announce': torrent.details };
-
-	client.on('scrape', function(data) {
-		console.log("got a response from tracker: "+data.announce);
-		console.log("number of seeders : "+data.complete);
-		console.log("number of leechers : "+data.incomplete);
-
-		seeders.push(data.complete);
-		leechers.push(data.incomplete);
-	});
-	client.on('error', function(err) {
-		console.log("Torrent client error : "+err); //self.resume();
-	});
-	client.on('warning', function(err) {
-		console.log("Torrent client warning : "+err); //self.resume();
-	});
-	client.scrape();
 
 });
 
