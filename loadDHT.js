@@ -1,9 +1,15 @@
-var seconds_per_batch = 3*60;
+var seconds_per_batch = 1*60;
 var torrents_per_batch = 100;
 
 var config = require ('./config/database');
 var fs = require('fs');
 
+/*
+var mongoose = require('mongoose');
+var config = require('./config/database');
+mongoose.connect(config.db.uri);
+var Torrent = require(__dirname+'/models/Torrent.js');
+*/
 var redis = require("redis");
     client = redis.createClient(config.redis.port, config.redis.host, config.redis.options);
 
@@ -45,82 +51,64 @@ console.log = function(data) {
    }
 };
 
-function timeout_torrents() {
-  // if (web_torrent_client.torrents.length > maximum_torrents) {
-  //   console.log("torrent timed out: " + web_torrent_client.torrents[0].infoHash);
-  //   web_torrent_client.remove(web_torrent_client.torrents[0].infoHash, function(err){
-  //     if(err) {console.log("web_torrent_client.remove error");console.log(err); return;}
-  //     console.log("web_torrent_client.torrents.length: " + web_torrent_client.torrents.length);
-  //   });
-  // }
-  if (web_torrent_client.torrents.length > 0) {
-    console.log("Killing torrent: " + web_torrent_client.torrents[0].infoHash);
-    web_torrent_client.remove(web_torrent_client.torrents[0].infoHash, function(err){
-      if(err) {console.log("web_torrent_client.remove error");console.log(err); return;}
-      console.log("web_torrent_client.torrents.length: " + web_torrent_client.torrents.length);
-    });
-  }
-
+function timeout_torrents(marked_torrent) {
+  marked_torrent--;
+  setTimeout(function() {
+    //kill trorrent
+    if (web_torrent_client.torrents[marked_torrent]) {
+      console.log("Killing torrent: " + web_torrent_client.torrents[marked_torrent].infoHash);
+      web_torrent_client.remove(web_torrent_client.torrents[marked_torrent].infoHash, function(err){
+        if(err) {console.log(err); return;}
+      });
+    }
+    //loop
+    if (marked_torrent > 0) {
+      timeout_torrents(marked_torrent)
+    }
+  });
 }
+
+
 
 function run() {
-
   client.lpop("DHTS",function(err, hash){
     if(err) {console.log(err); return;}
-    if(!hash) {return;}
-    if(fs.existsSync(dest+hash.toString().toUpperCase()+'.torrent')) {console.log("File "+hash.toString().toUpperCase()+".torrent already exists");return;}
-    var magnet = MAGNET_TEMPLATE.replace('{DHTHASH}',hash.toString().toUpperCase());
-
-    console.log("Downloading magnet: " + magnet);
-    var this_torrent = web_torrent_client.add(magnet);
-    this_torrent.on('error', function(err) {
-      if(err) {console.log(err); return;}
-    });
-
-
-  //   magnetToTorrent.getLink(magnet)
-  //   .then( function(torrentLink){
-  //     console.log("================================================================================");
-  //     console.log("Torrent link = " + torrentLink); // torrent url as string
-  //     console.log("Magnet link = " + magnet); // magnet as string
-  //     aria2.open(function() {
-  //       aria2.send('getVersion', function(err,res){
-  //         if(err) { console.log(err); return; }
-  //         aria2.send('addUri',[torrentLink, magnet],function(err,res){
-  //           if(err) { console.log(err); return;}
-  //           console.log("Added : " + hash.toString());
-  //           aria2.close();
-  //         })
-  //       });
-  //     });
-  //   })
-  //   .fail(function(error){
-  //     console.log("================================================================================");
-  //     console.error(error); // couldn't get a valid link
-  //     console.log("Magnet link = " + magnet); // magnet as string
-  //     aria2.open(function() {
-  //       aria2.send('getVersion', function(err,res){
-  //         if(err) { console.log(err); return; }
-  //         aria2.send('addUri',[magnet],function(err,res){
-  //           if(err) { console.log(err); return;}
-  //           console.log("Added : " + hash.toString());
-  //           aria2.close();
-  //         })
-  //       });
-  //     });
-  //   });
-  })
-
+    if(!hash) {console.log("no hash"); return;}
+//    Torrent.findById(hash, function(err, torrent){
+torrent = false
+      if (err) {console.log(err);}
+      if (!torrent) {
+        // Torrent not in DB. Has it been downloaded though?
+        var upper_case_hash = hash.toString().toUpperCase();
+        var torrent_file_path = dest + upper_case_hash + '.torrent';
+        if(fs.existsSync(torrent_file_path)) {
+          // Torrent file already downloaded
+        } else {
+          // Torrent not in DB and hasn't been downloaded yet. Downlaod it.
+          var magnet = MAGNET_TEMPLATE.replace('{DHTHASH}', hash.toString().toUpperCase());
+          console.log("Downloading magnet: " + magnet);
+          var this_torrent = web_torrent_client.add(magnet);
+          this_torrent.on('error', function(err) {
+            if(err) {console.log(err); return;}
+          });
+        }
+      } else {
+        // Torrent already present in DB
+      }
+//    });
+  });
 }
 
-setInterval(function(){
-  while (web_torrent_client.torrents.length > 0) {
-    timeout_torrents();
+function start_batch(){
+  for (i=0; i<web_torrent_client.torrents.length; i++) {
+    timeout_torrents(web_torrent_client.torrents.length);
   }
   setTimeout(function(){
     for (i=0; i<torrents_per_batch; i++) {
       run();
     }
   }, 3 * 1000);
-}, 1000 * seconds_per_batch);
+}
 
+start_batch();
+setInterval(start_batch, 1000 * seconds_per_batch);
