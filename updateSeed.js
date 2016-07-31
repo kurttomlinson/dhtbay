@@ -28,8 +28,8 @@ var filter = {};
 
 // 250 queries at a rate of 1 query every 2 seconds
 // takes a little over 8 minutes to complete
-var limit_count = 250;
-var seconds_per_torrent = 2;
+var limit_count = 160;
+var seconds_per_torrent = 3;
 
 Array.prototype.max = function() {
   return Math.max.apply(null, this);
@@ -77,9 +77,9 @@ stream.on('data', function(torrent) {
 		torrent.save(function(err) {
 			if(err) { console.log("Error while saving"+err); }
 			console.log("Torrent saved: "+torrent._id + " Seeders: " + torrent.swarm.seeders + " Leechers: " + torrent.swarm.leechers);
+			self.resume();
 		});
 
-		self.resume();
 	}, seconds_per_torrent * 1000);
 
 });
