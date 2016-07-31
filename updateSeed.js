@@ -39,6 +39,11 @@ var stream = Torrent.find(filter).sort({'lastmod': 1}).limit(limit_count).stream
 stream.on('data', function(torrent) {
 	var self = this;
 	self.pause();
+
+	var client = Client(peerId, port, parsedTorrent);
+	var seeders = [0];
+	var leechers = [0];
+
 	setTimeout(function(){
 		var seeders_max = Math.max.apply(null, seeders);
 		var leechers_max = Math.max.apply(null, leechers);
@@ -60,9 +65,6 @@ stream.on('data', function(torrent) {
 	console.log("Processing torrent : " + torrent._id);
 	var parsedTorrent = { 'infoHash': torrent._id, 'length': torrent.size, 'announce': torrent.details };
 
-	var client = Client(peerId, port, parsedTorrent);
-	var seeders = new Array();
-        var leechers = new Array();
 	client.on('scrape', function(data) {
 		console.log("got a response from tracker: "+data.announce);
 		console.log("number of seeders : "+data.complete);
