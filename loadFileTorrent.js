@@ -66,7 +66,7 @@ fs.readdir(TORRENT_PATH, function(err, files) {
             });
             t.save(function(err){
               console.log('File '+ofile+' added');
-              fs.unlinkSync(ofile);
+              //fs.unlinkSync(ofile);
               callback();
             });
           } else {
