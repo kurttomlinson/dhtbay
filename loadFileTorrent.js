@@ -55,7 +55,6 @@ fs.readdir(TORRENT_PATH, function(err, files) {
         Torrent.findById(infoHash, function(err, torrent){
           if(err) {console.log(err); callback(); return;}
           if(!torrent) {
-            console.log("a");
             var t = new Torrent({
               '_id': infoHash,
               'title': name,
@@ -65,12 +64,12 @@ fs.readdir(TORRENT_PATH, function(err, files) {
               'imported': new Date()
             });
             t.save(function(err){
-              console.log('File '+ofile+' added');
+              console.log('File ' + ofile + ' added');
               //fs.unlinkSync(ofile);
               callback();
             });
           } else {
-            console.log('Torrent '+infoHash+' already present.');
+            console.log('Torrent ' + infoHash + ' already present.');
             //fs.unlinkSync(ofile);
             callback();
           }
