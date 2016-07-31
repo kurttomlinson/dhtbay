@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+mongoose.Promise = global.Promise;
 var config = require('./config/database');
 mongoose.connect(config.db.uri);
 

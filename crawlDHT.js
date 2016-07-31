@@ -20,7 +20,7 @@ console.log = function(data) {
 var DHT = require('bittorrent-dht');
 
 function make_node(node_index) {
-  var port = starting_port + node_index
+  var port = starting_port + node_index;
   var ed = require('ed25519-supercop')
   var dht = new DHT({ verify: ed.verify })
   var build = function() {
