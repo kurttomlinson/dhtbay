@@ -1,14 +1,15 @@
 # dht-bay
 A DHT crawler, torrent indexer and search portal all in nodeJS
 
-IMPROVEMENTS FROM FLYERSWEB
+IMPROVEMENTS FROM FLYERSWEB BRANCH
 ---------------------------
 
 This is a fork with several improvements over the original repo.
 
 1. Slightly better documentation.
-2. When crawling the DHT multiple nodes are created. (Default is 100 nodes.) This speeds up indexing.
-3. The npm package "magnet-to-torrent" is used to find places to download .torrent files from a variety of sources instead of relying on torcache.net on staying up.
+2. When crawling the DHT, multiple nodes are created. (Default is 10 nodes.) This speeds up indexing.
+3. The torrents are downloaded directly from the swarm instead of from torrent caching websites.
+4. Updating the number of Seeders and Leechers works much better now.
 
 INSTALL
 -------
@@ -25,7 +26,7 @@ Install forever tool
 sudo npm install forever -g
 ```
 
-#### Install bitcannon
+#### Install BitCannon
 
 1. Download newest release from https://github.com/Stephen304/bitcannon/wiki/Installing-BitCannon and extract it.
 2. (Optional) Remove trackers and archives from the `bitcannon/config.json` file so it looks like this:
@@ -80,24 +81,56 @@ The rest of the configuration should be fine.
 Some tasks can be added in a cron treatment. For example this is my CRON configuration:
 
 ```
-# Update swarm every ten minutes
-*/10 * * * * nodejs /home/dht/updateSeed.js > /home/dht/log/update.log 2>&1
-# Bayesian categorization once an hour
-# 0 * * * * nodejs /home/dht/classifier.js> /home/dht/log/classifier.log 2>&1
-# Categorize once an hour
-# 30 * * * * nodejs /home/dht/categorize.js > /home/dht/log/categorize.log 2>&1
-# Load torrent files every minutes
+### DHT TASKS ###
+
+# Start a DHT crawler - retrieves infohashes from the DHT
+@reboot /usr/local/bin/forever -c /usr/local/bin/node -o /home/dht/dhtbay/logs/crawldht.txt -e /dev/null -a -l /dev/null start /home/dht/dhtbay/crawlDHT.js
+
+# Start trying to get *.torrent files from the DHT based on the infohashes collected by the crawler. The line below is listed 3 times so 3 cores on a 4-core CPU will be used.
+@reboot /usr/local/bin/forever -c /usr/local/bin/node -o /home/dht/dhtbay/logs/loaddht_0.txt -e /dev/null -a -l /dev/null start /home/dht/dhtbay/loadDHT.js
+@reboot /usr/local/bin/forever -c /usr/local/bin/node -o /home/dht/dhtbay/logs/loaddht_1.txt -e /dev/null -a -l /dev/null start /home/dht/dhtbay/loadDHT.js
+@reboot /usr/local/bin/forever -c /usr/local/bin/node -o /home/dht/dhtbay/logs/loaddht_2.txt -e /dev/null -a -l /dev/null start /home/dht/dhtbay/loadDHT.js
+
+# Restart forever scripts every hour - prevents memory leaks
+0 * * * * forever restartall
+
+### ADMINISTRATIVE TASKS ##
+
+# Trim log files every ten minutes so they don't get huge
+*/10 * * * * truncate /home/dht/dhtbay/logs/*.txt --size 0
+
+# Count torrents every 10 minutes for tuning/research purposes
+*/10 * * * * /home/dht/dhtbay/shell_scripts/count_torrents.sh
+
+### --- ### --- ### --- ### --- ### --- ### --- ### --- ### --- ### --- ###
+
+### BITCANNON TASKS ###
+
+# Start BitCannon at boot
+@reboot sleep 10 && ~/bitcannon/bitcannon_linux_amd64 > ~/bitcannon/log.txt 2>&1
+
+# Transfer torrents from DHT Crawler every minute
+* * * * * /home/bc/dhtbay/shell_scripts/rsync_torrents.sh
+
+### DB TASKS ###
+
+# Load torrent files into MongoDB every minutes
 * * * * * nodejs /home/dht/loadFileTorrent.js > /home/dht/logs/load.log 2>&1
+
+# Update Seeder and Leeecher counts every ten minutes
+*/10 * * * * nodejs /home/dht/updateSeed.js > /home/dht/log/update.log 2>&1
+
+
+### TORRENT CATEGORIZATION TASKS (OPTIONAL) ###
+
+# Bayesian categorization once an hour
+0 * * * * nodejs /home/dht/classifier.js> /home/dht/log/classifier.log 2>&1
+
+# Categorize once an hour
+30 * * * * nodejs /home/dht/categorize.js > /home/dht/log/categorize.log 2>&1
 ```
 
 Replace /home/dht/ with the path to where you cloned this repository.
-
-If cron on your operating system supports `@reboot` syntax, then you can add the following to your cron table:
-
-```
-@reboot /usr/local/bin/forever -c /usr/bin/node -a -l /dev/null -o /home/dht/dhtbay/logs/crawldht.txt -e /home/dht/dhtbay/logs/error_crawldht.txt start /home/dht/dhtbay/crawlDHT.js
-@reboot /usr/local/bin/forever -c /usr/bin/node -a -l /dev/null -o /home/dht/dhtbay/logs/loaddht.txt -e /home/dht/dhtbay/logs/error_loaddht.txt start /home/dht/dhtbay/loadDHT.js
-```
 
 If cron doesn't support the `@reboot` syntax on your system, you'll have to find some other way to make sure those commands get run each time your system boots.
 
