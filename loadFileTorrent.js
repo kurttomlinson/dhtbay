@@ -30,7 +30,7 @@ fs.readdir(TORRENT_PATH, function(err, files) {
   }).filter(function(file){
     return ( fs.statSync(file).isFile() && ( /\.torrent/.test(file) ) );
   });
-  async.each(ffiles, 
+  async.eachLimit(ffiles, 5,
     function(file, callback){
       var ofile = file;
       rt(ofile, function(err, ftorrent){
